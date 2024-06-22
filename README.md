@@ -157,6 +157,9 @@ const userController = require("../controllers/userController");
 
 router.post("/users", userController.createUser);
 router.get("/users", userController.getUsers);
+router.get("/users/:id", userController.getUser);
+router.delete("/users/:id", userController.deleteUser);
+router.put("/users/:id", userController.updateUser);
 
 module.exports = router;
 ```
@@ -184,6 +187,53 @@ exports.getUsers = async (req, res) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, password } = req.body;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { name, email, password },
+      { new: true, runValidators: true }
+    );
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -262,15 +312,61 @@ describe("Users", () => {
   });
 
   describe("POST /api/users", () => {
+    let userId;
+
     it("should create a new user", async () => {
       const user = {
         name: "John Doe",
         email: "john@example.com",
         password: "123456",
       };
+
       const response = await request(app).post("/api/users").send(user);
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty("name", "John Doe");
+      userId = response.body._id;
+    });
+
+    describe("PUT /api/users/:id", () => {
+      it("should update an existing user", async () => {
+        const updatedUser = {
+          name: "Jane Doe",
+          email: "jane@example.com",
+          password: "654321",
+        };
+
+        const response = await request(app)
+          .put(`/api/users/${userId}`)
+          .send(updatedUser);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("name", "Jane Doe");
+        expect(response.body).toHaveProperty("email", "jane@example.com");
+      });
+    });
+
+    describe("GET /api/users/:id", () => {
+      it("should get a single user by id", async () => {
+        const response = await request(app).get(`/api/users/${userId}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("name", "Jane Doe");
+        expect(response.body).toHaveProperty("email", "jane@example.com");
+      });
+    });
+
+    describe("DELETE /api/users/:id", () => {
+      it("should delete an existing user", async () => {
+        const response = await request(app).delete(`/api/users/${userId}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty(
+          "message",
+          "User deleted successfully"
+        );
+      });
+
+      it("should return 404 for a deleted user", async () => {
+        const response = await request(app).get(`/api/users/${userId}`);
+        expect(response.status).toBe(404);
+      });
     });
   });
 });
