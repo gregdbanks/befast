@@ -1,12 +1,10 @@
-
-
 <!-- // todo  Wish list:
 - //todo convert to es6
 - //todo  use typescript -->
 
 <!-- // optimize tested: 5 times -->
 
-![Description](befast.webp)
+![Description](befast.png)
 
 Below is a basic starter Express app with an MVC-like file structure and using Mongoose for MongoDB integration.
 
