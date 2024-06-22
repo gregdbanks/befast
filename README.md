@@ -6,6 +6,8 @@
 
 <!-- // optimize tested: 5 times -->
 
+![Description](befast.webp)
+
 Below is a basic starter Express app with an MVC-like file structure and using Mongoose for MongoDB integration.
 
 ### Step 1: Initialize the Project
