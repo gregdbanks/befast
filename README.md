@@ -1,20 +1,18 @@
-<!-- // todo  Wish list:
-- //todo convert to es6
-- //todo  use typescript -->
-
-<!-- // optimize tested: 5 times -->
+<!-- // optimize tested: 6 times -->
 
 ![Description](befast.png)
 
-Below is a basic starter Express app with an MVC-like file structure and using Mongoose for MongoDB integration.
+Below is a basic star wars missions app with an MVC-like file structure and using Mongoose for MongoDB integration.
+
+![Description](befast.png)
 
 ### Step 1: Initialize the Project
 
 First, create a new directory for your project and initialize it:
 
 ```bash
-mkdir my-express-app
-cd my-express-app
+mkdir star-wars-missions
+cd star-wars-missions
 npm init -y
 git init
 ```
@@ -38,19 +36,19 @@ npm install --save-dev nodemon
 Create the following directories and files:
 
 ```
-my-express-app/
+star-wars-missions/
 │
 ├── models/
-│   └── User.js
+│   └── Mission.js
 │
 ├── controllers/
-│   └── userController.js
+│   └── missionController.js
 │
 ├── routes/
-│   └── userRoutes.js
+│   └── missionRoutes.js
 │
 ├── test/
-│   └── user.test.js
+│   └── mission.test.js
 │
 ├── config/
 │   └── db.js
@@ -60,20 +58,17 @@ my-express-app/
 └── README.md
 ```
 
-_commands_
+_command to make file structure_
 
 ```bash
 mkdir -p models controllers routes test config
-touch models/User.js controllers/userController.js routes/userRoutes.js test/user.test.js config/db.js config/config.env app.js .gitignore
+touch models/Mission.js controllers/missionController.js routes/missionRoutes.js test/mission.test.js config/db.js config/config.env app.js .gitignore
 ```
 
 Add node modules and sensitive env variables
 
 ```gitignore
-# Node modules
 node_modules/
-
-# Environment variables
 config/config.env
 ```
 
@@ -88,37 +83,6 @@ MONGO_URI=<your mongo uri from mongoDb>
 
 ### Step 4: Configure the Application
 
-#### `app.js`
-
-Set up the Express application:
-
-```javascript
-const express = require("express");
-const bodyParser = require("body-parser");
-const connectDB = require("./config/db");
-const dotenv = require("dotenv");
-
-// Load env vars
-dotenv.config({ path: "./config/config.env" });
-
-const app = express();
-
-// Connect to the database
-connectDB();
-
-// Middleware
-app.use(bodyParser.json());
-
-// Routes
-app.use("/api", require("./routes/userRoutes"));
-
-// Start the server
-const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Server running on PORT: ${port}`));
-
-module.exports = app;
-```
-
 #### `config/db.js`
 
 Set up the MongoDB connection:
@@ -129,89 +93,170 @@ const mongoose = require("mongoose");
 const connectDb = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true, // this is the url parser with added functionality to parse complex url's with multiple hosts/addresses
-      useUnifiedTopology: true, // this adds in better server handling to meet distributed needs
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
-    console.log("hello, we have connection to the database");
+    console.log("Connected to the database");
   } catch (error) {
-    console.error(err.message);
-    process.exit(1); // this ensures we dont run an app in spite of a failed connection
+    console.error(error.message);
+    process.exit(1);
   }
 };
 
 const disconnectDb = async () => {
   await mongoose.disconnect();
-}; //todo need more info on why besides to get test working
+};
 
 module.exports = { connectDb, disconnectDb };
 ```
 
-#### `routes/userRoutes.js`
+#### `app.js`
 
-Create routes for the User operations:
+Set up the Express application:
+
+```javascript
+const express = require("express");
+const bodyParser = require("body-parser");
+const { connectDb } = require("./config/db");
+const dotenv = require("dotenv");
+
+// Load env vars
+dotenv.config({ path: "./config/config.env" });
+
+const app = express();
+
+// Connect to the database
+connectDb();
+
+// Middleware
+app.use(bodyParser.json());
+
+// Routes
+app.use("/api", require("./routes/missionRoutes"));
+
+// Start the server
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log(`Server running on PORT: ${port}`));
+
+module.exports = app;
+```
+
+#### `routes/missionRoutes.js`
+
+Create routes for the Mission operations:
 
 ```javascript
 const express = require("express");
 const router = express.Router();
-const userController = require("../controllers/userController");
+const missionController = require("../controllers/missionController");
 
-router.post("/users", userController.createUser);
-router.get("/users", userController.getUsers);
+router
+  .route("/missions")
+  .post(missionController.createMission)
+  .get(missionController.getMissions);
+
+router
+  .route("/missions/:id")
+  .get(missionController.getMission)
+  .put(missionController.updateMission)
+  .delete(missionController.deleteMission);
 
 module.exports = router;
 ```
 
-#### `controllers/userController.js`
+#### `controllers/missionController.js`
 
-Create a controller for User operations:
+Create a controller for Mission operations:
 
 ```javascript
-const User = require("../models/user");
+const Mission = require("../models/Mission");
 
-exports.createUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
+const handleAsyncErrors = (fn) => async (req, res, next) => {
   try {
-    let user = new User({ name, email, password });
-    await user.save();
-    res.status(201).json(user);
+    await fn(req, res, next);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === 11000) {
+      res.status(400).json({ error: "Mission with this name already exists" });
+    } else if (err.kind === "ObjectId" && err.name === "CastError") {
+      res.status(404).json({ error: "Mission not found" });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 };
 
-exports.getUsers = async (req, res) => {
-  try {
-    const users = await User.find();
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+exports.createMission = handleAsyncErrors(async (req, res) => {
+  const { name, description, status, commander } = req.body;
+  let mission = new Mission({ name, description, status, commander });
+  await mission.save();
+  res.status(201).json(mission);
+});
+
+exports.getMissions = handleAsyncErrors(async (req, res) => {
+  const missions = await Mission.find();
+  res.status(200).json(missions);
+});
+
+exports.deleteMission = handleAsyncErrors(async (req, res) => {
+  const { id } = req.params;
+  const mission = await Mission.findByIdAndDelete(id);
+  if (!mission) {
+    return res.status(404).json({ error: "Mission not found" });
   }
-};
+  res.status(200).json({ message: "Mission deleted successfully" });
+});
+
+exports.updateMission = handleAsyncErrors(async (req, res) => {
+  const { id } = req.params;
+  const { name, description, status, commander } = req.body;
+  const mission = await Mission.findByIdAndUpdate(
+    id,
+    { name, description, status, commander },
+    { new: true, runValidators: true }
+  );
+  if (!mission) {
+    return res.status(404).json({ error: "Mission not found" });
+  }
+  res.status(200).json(mission);
+});
+
+exports.getMission = handleAsyncErrors(async (req, res) => {
+  const { id } = req.params;
+  const mission = await Mission.findById(id);
+  if (!mission) {
+    return res.status(404).json({ error: "Mission not found" });
+  }
+  res.status(200).json(mission);
+});
 ```
 
-Create a simple User schema:
+Create a simple Mission schema:
 
 ```javascript
 const mongoose = require("mongoose");
 
-const User = new mongoose.Schema({
+const MissionSchema = new mongoose.Schema({
   name: {
-    type: String,
-    required: true,
-  },
-  email: {
     type: String,
     required: true,
     unique: true,
   },
-  password: {
+  description: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["pending", "in progress", "completed"],
+    default: "pending",
+  },
+  commander: {
     type: String,
     required: true,
   },
 });
 
-module.exports = mongoose.model("User", User);
+module.exports = mongoose.model("Mission", MissionSchema);
 ```
 
 ### Step 5: Run the Application
@@ -220,8 +265,9 @@ Add a start script to `package.json`:
 
 ```json
 "scripts": {
-  "start": "node app.js",
-  "dev": "nodemon app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "jest"
 }
 ```
 
@@ -233,7 +279,7 @@ npm run dev
 
 ### Step 6: Test the Application
 
-#### `test/user.test.js`
+#### `test/mission.test.js`
 
 Update the test file to use Jest and Supertest:
 
@@ -252,25 +298,91 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
-describe("Users", () => {
-  describe("GET /api/users", () => {
-    it("should get all users", async () => {
-      const response = await request(app).get("/api/users");
+describe("Missions", () => {
+  describe("GET /api/missions", () => {
+    it("should get all missions", async () => {
+      const response = await request(app).get("/api/missions");
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
     });
   });
 
-  describe("POST /api/users", () => {
-    it("should create a new user", async () => {
-      const user = {
-        name: "John Doe",
-        email: "john@example.com",
-        password: "123456",
+  describe("POST /api/missions", () => {
+    let missionId;
+
+    it("should create a new mission", async () => {
+      const mission = {
+        name: "Rescue Princess Leia",
+        description: "Rescue Princess Leia from the Death Star.",
+        status: "pending",
+        commander: "Luke Skywalker",
       };
-      const response = await request(app).post("/api/users").send(user);
+
+      const response = await request(app).post("/api/missions").send(mission);
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty("name", "John Doe");
+      expect(response.body).toHaveProperty("name", "Rescue Princess Leia");
+      missionId = response.body._id;
+    });
+
+    it("should not create a duplicate mission", async () => {
+      const mission = {
+        name: "Rescue Princess Leia",
+        description: "Rescue Princess Leia from the Death Star.",
+        status: "pending",
+        commander: "Luke Skywalker",
+      };
+
+      const response = await request(app).post("/api/missions").send(mission);
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty(
+        "error",
+        "Mission with this name already exists"
+      );
+    });
+
+    describe("PUT /api/missions/:id", () => {
+      it("should update an existing mission", async () => {
+        const updatedMission = {
+          name: "Destroy the Death Star",
+          description: "Destroy the Death Star using the Rebel fleet.",
+          status: "in progress",
+          commander: "Luke Skywalker",
+        };
+
+        const response = await request(app)
+          .put(`/api/missions/${missionId}`)
+          .send(updatedMission);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("name", "Destroy the Death Star");
+        expect(response.body).toHaveProperty("status", "in progress");
+      });
+    });
+
+    describe("GET /api/missions/:id", () => {
+      it("should get a single mission by id", async () => {
+        const response = await request(app).get(`/api/missions/${missionId}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty("name", "Destroy the Death Star");
+        expect(response.body).toHaveProperty("status", "in progress");
+      });
+    });
+
+    describe("DELETE /api/missions/:id", () => {
+      it("should delete an existing mission", async () => {
+        const response = await request(app).delete(
+          `/api/missions/${missionId}`
+        );
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty(
+          "message",
+          "Mission deleted successfully"
+        );
+      });
+
+      it("should return 404 for a deleted mission", async () => {
+        const response = await request(app).get(`/api/missions/${missionId}`);
+        expect(response.status).toBe(404);
+      });
     });
   });
 });
@@ -278,18 +390,10 @@ describe("Users", () => {
 
 #### Running Tests
 
-Add a test script to `package.json`:
-
-```json
-"scripts": {
-  "test": "jest"
-}
-```
-
 Run the tests:
 
 ```bash
 npm test
 ```
 
-With this setup, you have a basic Express app with an MVC-like structure, using Mongoose for MongoDB integration, and a testing setup using Jest and Supertest.
+With this setup, you have a basic Express app with an MVC-like structure, using Mongoose for MongoDB integration, and a testing setup using Jest and Supertest, all tailored for handling Star Wars missions.
