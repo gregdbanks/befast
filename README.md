@@ -1,12 +1,8 @@
-<!-- // todo  Wish list:
-- //todo convert to ES6
-- //todo  use TypeScript -->
-
-<!-- // optimize tested: 5 times -->
+<!-- // optimize tested: 6 times -->
 
 ![Description](befast.png)
 
-Below is a basic starter Express app with an MVC-like file structure and using Mongoose for MongoDB integration.
+Below is a basic star wars missions app with an MVC-like file structure and using Mongoose for MongoDB integration.
 
 ### Step 1: Initialize the Project
 
@@ -60,7 +56,7 @@ star-wars-missions/
 └── README.md
 ```
 
-_commands_
+_command to make file structure_
 
 ```bash
 mkdir -p models controllers routes test config
@@ -70,10 +66,7 @@ touch models/Mission.js controllers/missionController.js routes/missionRoutes.js
 Add node modules and sensitive env variables
 
 ```gitignore
-# Node modules
 node_modules/
-
-# Environment variables
 config/config.env
 ```
 
@@ -95,7 +88,7 @@ Set up the Express application:
 ```javascript
 const express = require("express");
 const bodyParser = require("body-parser");
-const connectDb = require("./config/db");
+const { connectDb } = require("./config/db");
 const dotenv = require("dotenv");
 
 // Load env vars
@@ -275,8 +268,9 @@ Add a start script to `package.json`:
 
 ```json
 "scripts": {
-  "start": "node app.js",
-  "dev": "nodemon app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "jest"
 }
 ```
 
