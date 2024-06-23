@@ -81,6 +81,33 @@ MONGO_URI=<your mongo uri from mongoDb>
 
 ### Step 4: Configure the Application
 
+#### `config/db.js`
+
+Set up the MongoDB connection:
+
+```javascript
+const mongoose = require("mongoose");
+
+const connectDb = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to the database");
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+};
+
+const disconnectDb = async () => {
+  await mongoose.disconnect();
+};
+
+module.exports = { connectDb, disconnectDb };
+```
+
 #### `app.js`
 
 Set up the Express application:
@@ -110,33 +137,6 @@ const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`Server running on PORT: ${port}`));
 
 module.exports = app;
-```
-
-#### `config/db.js`
-
-Set up the MongoDB connection:
-
-```javascript
-const mongoose = require("mongoose");
-
-const connectDb = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("Connected to the database");
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
-};
-
-const disconnectDb = async () => {
-  await mongoose.disconnect();
-};
-
-module.exports = { connectDb, disconnectDb };
 ```
 
 #### `routes/missionRoutes.js`
@@ -172,7 +172,11 @@ exports.createMission = async (req, res) => {
     await mission.save();
     res.status(201).json(mission);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.code === 11000) {
+      res.status(400).json({ error: "Mission with this name already exists" });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 };
 
@@ -392,14 +396,6 @@ describe("Missions", () => {
 ```
 
 #### Running Tests
-
-Add a test script to `package.json`:
-
-```json
-"scripts": {
-  "test": "jest"
-}
-```
 
 Run the tests:
 
