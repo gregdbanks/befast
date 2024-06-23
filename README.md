@@ -1,10 +1,8 @@
-<!-- // optimize tested: 6 times -->
+<!-- // optimize tested: 7 times -->
 
 ![Description](befast.png)
 
 Below is a basic star wars missions app with an MVC-like file structure and using Mongoose for MongoDB integration.
-
-![Description](befast.png)
 
 ### Step 1: Initialize the Project
 
