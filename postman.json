@@ -1,0 +1,475 @@
+{
+  "info": {
+    "name": "Missions and Incidents API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Missions",
+      "item": [
+        {
+          "name": "Get All Missions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/missions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a New Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Rescue Princess Leia\", \"description\": \"Rescue Princess Leia from the Death Star.\", \"status\": \"pending\", \"commander\": \"Luke Skywalker\"}"
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/missions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response contains mission name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name', 'Rescue Princess Leia');",
+                  "    pm.environment.set('missionId', jsonData._id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a Duplicate Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Rescue Princess Leia\", \"description\": \"Rescue Princess Leia from the Death Star.\", \"status\": \"pending\", \"commander\": \"Luke Skywalker\"}"
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/missions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test(\"Response contains error message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.include('Mission with this name already exists');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update a Mission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Destroy the Death Star\", \"description\": \"Destroy the Death Star using the Rebel fleet.\", \"status\": \"in progress\", \"commander\": \"Luke Skywalker\"}"
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains updated mission name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name', 'Destroy the Death Star');",
+                  "    pm.expect(jsonData).to.have.property('status', 'in progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get a Mission by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains mission name\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('name', 'Destroy the Death Star');",
+                  "    pm.expect(jsonData).to.have.property('status', 'in progress');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete a Mission",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains delete message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message', 'Mission deleted successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Deleted Mission",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Incidents",
+      "item": [
+        {
+          "name": "Create a New Incident",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Locate Han Solo\", \"description\": \"Find out where Han Solo is being held.\", \"status\": \"pending\", \"mission\": \"{{missionId}}\"}"
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}/incidents",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}", "incidents"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test(\"Response contains incident title\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title', 'Locate Han Solo');",
+                  "    pm.environment.set('incidentId', jsonData._id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Incidents for a Mission",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/missions/{{missionId}}/incidents",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "missions", "{{missionId}}", "incidents"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get an Incident by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/incidents/{{incidentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "incidents", "{{incidentId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains incident title\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title', 'Locate Han Solo');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update an Incident",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Free Han Solo\", \"description\": \"Free Han Solo from his carbonite prison.\", \"status\": \"resolved\"}"
+            },
+            "url": {
+              "raw": "http://localhost:4001/api/incidents/{{incidentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "incidents", "{{incidentId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains updated incident title\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('title', 'Free Han Solo');",
+                  "    pm.expect(jsonData).to.have.property('status', 'resolved');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete an Incident",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/incidents/{{incidentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "incidents", "{{incidentId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response contains delete message\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('message', 'Incident deleted successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Deleted Incident",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:4001/api/incidents/{{incidentId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "4001",
+              "path": ["api", "incidents", "{{incidentId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

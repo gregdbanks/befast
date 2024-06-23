@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use("/api", require("./routes/missionRoutes"));
+app.use("/api", require("./routes/incidentRoutes"));
 
 // Start the server
 const port = process.env.PORT || 4000;
