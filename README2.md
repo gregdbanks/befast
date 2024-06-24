@@ -42,6 +42,19 @@ const IncidentSchema = new mongoose.Schema({
 module.exports = mongoose.model("Incident", IncidentSchema);
 ```
 
+and add this to your Mission model to establish your relationship
+
+```js
+// ...
+  incidents: [
+      {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Incident",
+      },
+  ],
+// ...
+```
+
 ### Step 8: Create Incident Controller
 
 #### `controllers/incidentController.js`
@@ -50,7 +63,7 @@ Add util for handleAsyncErrors and replace code in both controllers with importe
 
 ```bash
 mkdir utils
-touch utils/errorHandler.js //todo can be added to tob when you get the other commands
+touch utils/errorHandler.js controllers/incidentController.js routes/incidentRoutes.js 
 ```
 
 ```js
