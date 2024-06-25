@@ -66,6 +66,8 @@ mkdir utils
 touch utils/errorHandler.js controllers/incidentController.js routes/incidentRoutes.js 
 ```
 
+Add the code below to the utils utils/errorHandler.js
+
 ```js
 const handleAsyncErrors = (fn) => async (req, res, next) => {
   try {

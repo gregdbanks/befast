@@ -79,94 +79,42 @@ PORT=4000
 MONGO_URI=<your mongo uri from mongoDb>
 ```
 
-### Step 4: Configure the Application
+### Step 4: Make model
 
-#### `config/db.js`
-
-Set up the MongoDB connection:
+Create a simple Mission schema:
 
 ```javascript
+// /model/Mission.js
 const mongoose = require("mongoose");
 
-const connectDb = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("Connected to the database");
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
-};
+const MissionSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["pending", "in progress", "completed"],
+    default: "pending",
+  },
+  commander: {
+    type: String,
+    required: true,
+  },
+});
 
-const disconnectDb = async () => {
-  await mongoose.disconnect();
-};
-
-module.exports = { connectDb, disconnectDb };
+module.exports = mongoose.model("Mission", MissionSchema);
 ```
 
-#### `app.js`
-
-Set up the Express application:
+### Step 5: Create a controller for Mission operations:
 
 ```javascript
-const express = require("express");
-const bodyParser = require("body-parser");
-const { connectDb } = require("./config/db");
-const dotenv = require("dotenv");
-
-// Load env vars
-dotenv.config({ path: "./config/config.env" });
-
-const app = express();
-
-// Connect to the database
-connectDb();
-
-// Middleware
-app.use(bodyParser.json());
-
-// Routes
-app.use("/api", require("./routes/missionRoutes"));
-
-// Start the server
-const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Server running on PORT: ${port}`));
-
-module.exports = app;
-```
-
-#### `routes/missionRoutes.js`
-
-Create routes for the Mission operations:
-
-```javascript
-const express = require("express");
-const router = express.Router();
-const missionController = require("../controllers/missionController");
-
-router
-  .route("/missions")
-  .post(missionController.createMission)
-  .get(missionController.getMissions);
-
-router
-  .route("/missions/:id")
-  .get(missionController.getMission)
-  .put(missionController.updateMission)
-  .delete(missionController.deleteMission);
-
-module.exports = router;
-```
-
-#### `controllers/missionController.js`
-
-Create a controller for Mission operations:
-
-```javascript
+// /controllers/missionController.js
 const Mission = require("../models/Mission");
 
 const handleAsyncErrors = (fn) => async (req, res, next) => {
@@ -228,7 +176,80 @@ exports.getMission = handleAsyncErrors(async (req, res) => {
 });
 ```
 
-Create a simple Mission schema:
+### Step 6: Create routes for the Mission operations:
+
+```javascript
+// /routes/missionRoutes.js
+const express = require("express");
+const router = express.Router();
+const missionController = require("../controllers/missionController");
+
+router
+  .route("/missions")
+  .post(missionController.createMission)
+  .get(missionController.getMissions);
+
+router
+  .route("/missions/:id")
+  .get(missionController.getMission)
+  .put(missionController.updateMission)
+  .delete(missionController.deleteMission);
+
+module.exports = router;
+```
+
+### Step 7: Set up the MongoDB connection:
+
+```javascript
+// /config/db.js
+const mongoose = require("mongoose");
+
+const connectDb = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to the database");
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+};
+
+const disconnectDb = async () => {
+  await mongoose.disconnect();
+};
+
+module.exports = { connectDb, disconnectDb };
+```
+
+### Step 8: Set up the Express application:
+
+```javascript
+// app.js
+const express = require("express");
+const bodyParser = require("body-parser");
+const { connectDb } = require("./config/db");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config/config.env" }); // Load env vars
+
+const app = express();
+
+connectDb(); 
+
+app.use(bodyParser.json()); // Middleware
+
+app.use("/api", require("./routes/missionRoutes")); 
+
+const port = process.env.PORT || 4000;
+app.listen(port, () => console.log(`Server running on PORT: ${port}`)); // Start the server
+
+module.exports = app;
+```
+
+### Step 9: Create a simple Mission schema:
 
 ```javascript
 const mongoose = require("mongoose");
@@ -257,7 +278,7 @@ const MissionSchema = new mongoose.Schema({
 module.exports = mongoose.model("Mission", MissionSchema);
 ```
 
-### Step 5: Run the Application
+### Step 10: Run the Application
 
 Add a start script to `package.json`:
 
@@ -269,19 +290,20 @@ Add a start script to `package.json`:
 }
 ```
 
-Start the application:
+### Step 11: Start the application:
 
 ```bash
 npm run dev
 ```
 
-### Step 6: Test the Application
+### Step 12: Test the Application 
 
-#### `test/mission.test.js`
+<!-- //!optimize, this could be broken up into steps -->
 
 Update the test file to use Jest and Supertest:
 
 ```javascript
+// test/mission.test.js
 const request = require("supertest");
 const app = require("../app");
 const mongoose = require("mongoose");
