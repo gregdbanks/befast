@@ -3,15 +3,14 @@
 Now, let's add the `Incident` model and routes that are associated with the `Mission` object.
 This will allow us to handle incidents that belong to specific missions
 
-### Step 7: Create Incident Model
+### Step 1: Create Incident Model
 
 //optimize: add command to create all files etc for speed
 
-#### `models/Incident.js`
-
-Create a simple `Incident` schema with dummy fields:
+Create a simple `Incident` schema:
 
 ```javascript
+// models/Incident.js
 const mongoose = require("mongoose");
 
 const IncidentSchema = new mongoose.Schema({
@@ -42,9 +41,11 @@ const IncidentSchema = new mongoose.Schema({
 module.exports = mongoose.model("Incident", IncidentSchema);
 ```
 
-and add this to your Mission model to establish your relationship
+### Step 2: Add field to your Mission model to establish your relationship
 
 ```js
+// /model/Mission.js
+
 // ...
   incidents: [
       {
@@ -55,9 +56,7 @@ and add this to your Mission model to establish your relationship
 // ...
 ```
 
-### Step 8: Create Incident Controller
-
-#### `controllers/incidentController.js`
+### Step 3: Create Utility for controllers to share
 
 Add util for handleAsyncErrors and replace code in both controllers with imported function
 
@@ -66,9 +65,8 @@ mkdir utils
 touch utils/errorHandler.js controllers/incidentController.js routes/incidentRoutes.js 
 ```
 
-Add the code below to the utils utils/errorHandler.js
-
 ```js
+// utils/errorHandler.js
 const handleAsyncErrors = (fn) => async (req, res, next) => {
   try {
     await fn(req, res, next);
@@ -86,9 +84,10 @@ const handleAsyncErrors = (fn) => async (req, res, next) => {
 module.exports = handleAsyncErrors;
 ```
 
-Create a controller for Incident operations:
+### Step 4: Create a controller for Incident operations:
 
 ```javascript
+// controllers/incidentController.js
 const Incident = require("../models/Incident");
 const handleAsyncErrors = require("../utils/errorHandler");
 
@@ -137,13 +136,10 @@ exports.deleteIncident = handleAsyncErrors(async (req, res) => {
 });
 ```
 
-### Step 9: Create Incident Routes
-
-#### `routes/incidentRoutes.js`
-
-Create routes for the Incident operations:
+### Step 5: Create Incident Routes
 
 ```javascript
+// routes/incidentRoutes.js
 const express = require("express");
 const router = express.Router();
 const incidentController = require("../controllers/incidentController");
@@ -162,13 +158,12 @@ router
 module.exports = router;
 ```
 
-### Step 10: Update Application to Use Incident Routes
-
-#### `app.js`
+### Step 6: Update Application to Use Incident Routes
 
 Include the incident routes in the main application:
 
 ```javascript
+// app.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const { connectDb } = require("./config/db");
@@ -196,13 +191,12 @@ app.listen(port, () => console.log(`Server running on PORT: ${port}`));
 module.exports = app;
 ```
 
-### Step 11: Test the Incident Functionality
+### Step 7: Test the Incident Functionality
 
-#### `test/mission.test.js`
-
-Add tests for the Incident endpoints:
+<!-- // optimize: Need to break these up into own test file. Ran into issues doing this but i wasnt cleaning up test -->
 
 ```javascript
+// test/mission.test.js
 const request = require("supertest");
 const mongoose = require("mongoose");
 const { connectDb, disconnectDb } = require("../config/db");
@@ -419,4 +413,4 @@ Run the tests to ensure everything is working as expected:
 npm test
 ```
 
-With these steps, you have added the `Incident` model and routes associated with the `Mission` object. This allows you to manage incidents related to specific missions, providing a more comprehensive structure for your Star Wars missions app.
+With these steps, you have added the `Incident` model and routes associated with the `Mission` object. This allows you to manage incidents related to specific missions.
