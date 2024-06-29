@@ -5,7 +5,10 @@ This will allow us to handle incidents that belong to specific missions
 
 ### Step 1: Create Incident Model
 
-//optimize: add command to create all files etc for speed
+```bash
+mkdir utils
+touch models/Incident.js utils/errorHandler.js controllers/incidentController.js routes/incidentRoutes.js 
+```
 
 Create a simple `Incident` schema:
 
@@ -59,11 +62,6 @@ module.exports = mongoose.model("Incident", IncidentSchema);
 ### Step 3: Create Utility for controllers to share
 
 Add util for handleAsyncErrors and replace code in both controllers with imported function
-
-```bash
-mkdir utils
-touch utils/errorHandler.js controllers/incidentController.js routes/incidentRoutes.js 
-```
 
 ```js
 // utils/errorHandler.js
