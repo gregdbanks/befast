@@ -249,35 +249,6 @@ app.listen(port, () => console.log(`Server running on PORT: ${port}`)); // Start
 module.exports = app;
 ```
 
-### Step 9: Create a simple Mission schema:
-
-```javascript
-const mongoose = require("mongoose");
-
-const MissionSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ["pending", "in progress", "completed"],
-    default: "pending",
-  },
-  commander: {
-    type: String,
-    required: true,
-  },
-});
-
-module.exports = mongoose.model("Mission", MissionSchema);
-```
-
 ### Step 10: Run the Application
 
 Add a start script to `package.json`:
