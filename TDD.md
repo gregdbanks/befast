@@ -1,11 +1,49 @@
-<!-- // optimize tested: 10 times -->
-<!--// todo Some goals:
-// todo: Convert to typescript and modules
-// todo: Teach this in tdd using supertest -->
+//optimize: The main goal here is we start out with failed test first
+<!-- ```javascript 
+// test/mission.test.js
+const request = require("supertest");
+const app = require("../index");
+const mongoose = require("mongoose");
+const { connectDb, disconnectDb } = require("../config/db");
 
-![Description](befast.png)
+beforeAll(async () => {
+    await connectDb();
+});
 
-Below is a basic star wars missions app with an MVC-like file structure and using Mongoose for MongoDB integration.
+afterAll(async () => {
+    await disconnectDb();
+    await mongoose.connection.close();
+});
+
+describe("Missions", () => {
+    describe("POST /api/missions", () => {
+        let missionId;
+        let id = new Date().getMilliseconds();
+
+        it("should create a new mission", async () => {
+            const mission = {
+                name: "Rescue Princess Leia" + id,
+                description: "Rescue Princess Leia from the Death Star.",
+                status: "pending",
+                commander: "Luke Skywalker",
+            };
+
+            const response = await request(app).post("/api/missions").send(mission);
+            expect(response.status).toBe(201);
+            expect(response.body).toHaveProperty("name", "Rescue Princess Leia" + id);
+            missionId = response.body._id;
+        });
+    });
+});
+```
+
+#### Running Tests
+
+Run the tests:
+
+```bash
+npm test
+``` -->
 
 ### Step 1: Initialize the Project
 
@@ -140,43 +178,6 @@ exports.createMission = handleAsyncErrors(async (req, res) => {
   await mission.save();
   res.status(201).json(mission);
 });
-
-exports.getMissions = handleAsyncErrors(async (req, res) => {
-  const missions = await Mission.find();
-  res.status(200).json(missions);
-});
-
-exports.deleteMission = handleAsyncErrors(async (req, res) => {
-  const { id } = req.params;
-  const mission = await Mission.findByIdAndDelete(id);
-  if (!mission) {
-    return res.status(404).json({ error: "Mission not found" });
-  }
-  res.status(200).json({ message: "Mission deleted successfully" });
-});
-
-exports.updateMission = handleAsyncErrors(async (req, res) => {
-  const { id } = req.params;
-  const { name, description, status, commander } = req.body;
-  const mission = await Mission.findByIdAndUpdate(
-    id,
-    { name, description, status, commander },
-    { new: true, runValidators: true }
-  );
-  if (!mission) {
-    return res.status(404).json({ error: "Mission not found" });
-  }
-  res.status(200).json(mission);
-});
-
-exports.getMission = handleAsyncErrors(async (req, res) => {
-  const { id } = req.params;
-  const mission = await Mission.findById(id);
-  if (!mission) {
-    return res.status(404).json({ error: "Mission not found" });
-  }
-  res.status(200).json(mission);
-});
 ```
 
 ### Step 6: Create routes for the Mission operations:
@@ -190,13 +191,6 @@ const missionController = require("../controllers/missionController");
 router
   .route("/missions")
   .post(missionController.createMission)
-  .get(missionController.getMissions);
-
-router
-  .route("/missions/:id")
-  .get(missionController.getMission)
-  .put(missionController.updateMission)
-  .delete(missionController.deleteMission);
 
 module.exports = router;
 ```
@@ -293,10 +287,6 @@ afterAll(async () => {
 // Import and execute mission tests
 const missionTests = require('./mission');
 missionTests();
-
-// Import and execute incident tests
-const incidentTests = require('./incident');
-incidentTests();
 ``` -->
 
 <!-- ```js
@@ -316,106 +306,38 @@ Update the test file to use Jest and Supertest:
 ```javascript
 // test/mission.test.js
 const request = require("supertest");
-const app = require("../app");
+const app = require("../index");
 const mongoose = require("mongoose");
 const { connectDb, disconnectDb } = require("../config/db");
 
 beforeAll(async () => {
-  await connectDb();
+    await connectDb();
 });
 
 afterAll(async () => {
-  await disconnectDb();
-  await mongoose.connection.close();
+    await disconnectDb();
+    await mongoose.connection.close();
 });
 
 describe("Missions", () => {
-  describe("GET /api/missions", () => {
-    it("should get all missions", async () => {
-      const response = await request(app).get("/api/missions");
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+    describe("POST /api/missions", () => {
+        let missionId;
+        let id = new Date().getMilliseconds();
+
+        it("should create a new mission", async () => {
+            const mission = {
+                name: "Rescue Princess Leia" + id,
+                description: "Rescue Princess Leia from the Death Star.",
+                status: "pending",
+                commander: "Luke Skywalker",
+            };
+
+            const response = await request(app).post("/api/missions").send(mission);
+            expect(response.status).toBe(201);
+            expect(response.body).toHaveProperty("name", "Rescue Princess Leia" + id);
+            missionId = response.body._id;
+        });
     });
-  });
-
-  describe("POST /api/missions", () => {
-    let missionId;
-
-    it("should create a new mission", async () => {
-      const mission = {
-        name: "Rescue Princess Leia",
-        description: "Rescue Princess Leia from the Death Star.",
-        status: "pending",
-        commander: "Luke Skywalker",
-      };
-
-      const response = await request(app).post("/api/missions").send(mission);
-      expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty("name", "Rescue Princess Leia");
-      missionId = response.body._id;
-    });
-
-    it("should not create a duplicate mission", async () => {
-      const mission = {
-        name: "Rescue Princess Leia",
-        description: "Rescue Princess Leia from the Death Star.",
-        status: "pending",
-        commander: "Luke Skywalker",
-      };
-
-      const response = await request(app).post("/api/missions").send(mission);
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty(
-        "error",
-        "Mission with this name already exists"
-      );
-    });
-
-    describe("PUT /api/missions/:id", () => {
-      it("should update an existing mission", async () => {
-        const updatedMission = {
-          name: "Destroy the Death Star",
-          description: "Destroy the Death Star using the Rebel fleet.",
-          status: "in progress",
-          commander: "Luke Skywalker",
-        };
-
-        const response = await request(app)
-          .put(`/api/missions/${missionId}`)
-          .send(updatedMission);
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("name", "Destroy the Death Star");
-        expect(response.body).toHaveProperty("status", "in progress");
-      });
-    });
-
-    describe("GET /api/missions/:id", () => {
-      it("should get a single mission by id", async () => {
-        const response = await request(app).get(`/api/missions/${missionId}`);
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty("name", "Destroy the Death Star");
-        expect(response.body).toHaveProperty("status", "in progress");
-      });
-    });
-
-    describe("DELETE /api/missions/:id", () => {
-      it("should delete an existing mission", async () => {
-        const response = await request(app).delete(
-          `/api/missions/${missionId}`
-        );
-        expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty(
-          "message",
-          "Mission deleted successfully"
-        );
-      });
-
-      it("should return 404 for a deleted mission", async () => {
-        const response = await request(app).get(`/api/missions/${missionId}`);
-        expect(response.status).toBe(404);
-      });
-    });
-  });
 });
 ```
 
@@ -427,4 +349,3 @@ Run the tests:
 npm test
 ```
 
-With this setup, you have a basic Express app with an MVC-like structure, using Mongoose for MongoDB integration, and a testing setup using Jest and Supertest, all tailored for handling Star Wars missions.
